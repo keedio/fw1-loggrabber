@@ -2,7 +2,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "FW1-Loggrabber"
-!define PRODUCT_VERSION "1.11"
+!define PRODUCT_VERSION "1.11.1"
 !define PRODUCT_PUBLISHER "Torsten Fellhauer"
 !define PRODUCT_WEB_SITE "http://sourceforge.net/projects/fw1-loggrabber"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\fw1-loggrabber.exe"
@@ -47,7 +47,7 @@ var ICONS_GROUP
 ; MUI end ------
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
-OutFile "fw1-loggrabber-1.11-win32.exe"
+OutFile "fw1-loggrabber-1.11.1-win32.exe"
 InstallDir "$PROGRAMFILES\FW1-Loggrabber"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails show
@@ -57,10 +57,10 @@ Section "Hauptgruppe" SEC01
   SetOutPath "$INSTDIR"
   SetOverwrite ifnewer
   File "CHANGES"
-  File "fw1-loggrabber.conf"
+  File /oname="fw1-loggrabber.conf-sample" "fw1-loggrabber.conf-win-sample"
   File "Release\fw1-loggrabber.exe"
   File "fw1-loggrabber.html"
-  File "lea.conf"
+  File /oname="lea.conf-sample" "lea.conf-win-sample"
 
 ; Shortcuts
   !insertmacro MUI_STARTMENU_WRITE_BEGIN Application

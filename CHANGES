@@ -2,7 +2,7 @@
 FW1-LOGGRABBER
 
 Author:           Torsten Fellhauer <torsten@fellhauer-web.de>
-current Version:  1.11
+current Version:  1.11.1
 ***********************************************************************
 
 Copyright (c) 2005 Torsten Fellhauer, Xiaodong Lin
@@ -129,3 +129,8 @@ CHANGE HISTORY
   o added INSTALL script to Unix/Linux-distribution
   o created INSTALLER for W32-distribution
   o replace newline character in resource field by (+)
+
+* 1.11.1 - bugfixes (2005/02/20)
+  o fixed bug with filter arguments (src, dst, ...)
+  o fixed bug for ODBC support of Oracle 9 
+  o recompiled binaries using CPs LEA-hotfix

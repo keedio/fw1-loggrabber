@@ -2,7 +2,7 @@
 FW1-LOGGRABBER
 
 Author:           Torsten Fellhauer <torsten@fellhauer-web.de>
-current Version:  1.11
+current Version:  1.11.1
 ***********************************************************************
 
 Copyright (c) 2004 Torsten Fellhauer, Xiaodong Lin 

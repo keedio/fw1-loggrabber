@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* fw1-loggrabber - (C)2005 Torsten Fellhauer, Xiaodong Lin                   */
 /******************************************************************************/
-/* Version: 1.11                                                              */
+/* Version: 1.11.1                                                            */
 /******************************************************************************/
 /*                                                                            */
 /* Copyright (c) 2005 Torsten Fellhauer, Xiaodong Lin                         */
@@ -76,7 +76,7 @@
 /*
  * Constant definitions
  */
-#define VERSION			"1.11"
+#define VERSION			"1.11.1"
 
 #ifdef WIN32
 #	define ODBCVERSION	"Windows-ODBC-support"

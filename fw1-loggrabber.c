@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* fw1-loggrabber - (C)2005 Torsten Fellhauer, Xiaodong Lin                   */
 /******************************************************************************/
-/* Version: 1.11                                                              */
+/* Version: 1.11.1                                                            */
 /******************************************************************************/
 /*                                                                            */
 /* Copyright (c) 2005 Torsten Fellhauer, Xiaodong Lin                         */
@@ -913,7 +913,7 @@ read_fw1_logfile (char **LogfileName)
 		  for (i = 0; i < cfgvalues.fw1_filter_count; i++)
 		    {
 		      if ((rb =
-			   create_audit_filter_rule (rb,
+			   create_fw1_filter_rule (rb,
 						     cfgvalues.
 						     fw1_filter_array[i])) ==
 			  NULL)
@@ -6026,8 +6026,8 @@ open_odbc ()
     {
       if (cfgvalues.audit_mode)
 	{
-	  if (string_incmp (dbms_name, "db2", 3) == 0)
-	    {
+      if ((string_incmp (dbms_name, "db2", 3) == 0) || (string_incmp (dbms_name, "oracle", 6) == 0))
+		{
 	      tmptablename = string_toupper (audittable);
 	    }
 	  else
@@ -6037,7 +6037,7 @@ open_odbc ()
 	}
       else
 	{
-	  if (string_incmp (dbms_name, "db2", 3) == 0)
+      if ((string_incmp (dbms_name, "db2", 3) == 0) || (string_incmp (dbms_name, "oracle", 6) == 0))
 	    {
 	      tmptablename = string_toupper (logtable);
 	    }
@@ -6629,7 +6629,7 @@ create_loggrabber_tables ()
    */
   create = TRUE;
 
-  if (string_incmp (dbms_name, "db2", 3) == 0)
+  if ((string_incmp (dbms_name, "db2", 3) == 0) || (string_incmp (dbms_name, "oracle", 6) == 0))
     {
       tablename = string_toupper (infotable);
     }
@@ -6769,7 +6769,7 @@ create_loggrabber_tables ()
    */
   create = TRUE;
 
-  if (string_incmp (dbms_name, "db2", 3) == 0)
+  if ((string_incmp (dbms_name, "db2", 3) == 0) || (string_incmp (dbms_name, "oracle", 6) == 0))
     {
       tablename = string_toupper (logtable);
     }
@@ -6906,7 +6906,7 @@ create_loggrabber_tables ()
    */
   create = TRUE;
 
-  if (string_incmp (dbms_name, "db2", 3) == 0)
+  if ((string_incmp (dbms_name, "db2", 3) == 0) || (string_incmp (dbms_name, "oracle", 6) == 0))
     {
       tablename = string_toupper (audittable);
     }
