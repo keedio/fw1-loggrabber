@@ -114,7 +114,7 @@ CHANGE HISTORY
   o disabled connection timeout
   o implemented additional output methods (file, syslog)
 
-* 1.11 - some new features (xxxx/xx/xx)
+* 1.11 - some new features (2005/01/02)
   o separated connection configuration into lea.conf
   o looking for config files in cwd or absolute dir
   o implemented configureable syslog facility
