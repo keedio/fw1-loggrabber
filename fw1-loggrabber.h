@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* fw1-loggrabber - (C)2004 Torsten Fellhauer, Xiaodong Lin                   */
 /******************************************************************************/
-/* Version: 1.10                                                              */
+/* Version: 1.11                                                              */
 /******************************************************************************/
 /*                                                                            */
 /* Copyright (c) 2004 Torsten Fellhauer, Xiaodong Lin                         */
@@ -75,7 +75,7 @@
 /*
  * Constant definitions
  */
-#define VERSION			"1.10"
+#define VERSION			"1.11"
 
 #define TRUE			1
 #define FALSE			0

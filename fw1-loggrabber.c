@@ -1,7 +1,7 @@
 /******************************************************************************/
 /* fw1-loggrabber - (C)2004 Torsten Fellhauer, Xiaodong Lin                   */
 /******************************************************************************/
-/* Version: 1.10                                                              */
+/* Version: 1.11                                                              */
 /******************************************************************************/
 /*                                                                            */
 /* Copyright (c) 2004 Torsten Fellhauer, Xiaodong Lin                         */
@@ -481,7 +481,12 @@ int main(int argc, char *argv[])
 	 * check whether command line options override configfile options
  	 */
 	cfgvalues.mysql_mode = (mysql_mode != -1) ? mysql_mode : cfgvalues.mysql_mode;
+<<<<<<< fw1-loggrabber.c
+#endif
 	cfgvalues.debug_mode = (debug_mode != 0) ? debug_mode : cfgvalues.debug_mode;
+=======
+	cfgvalues.debug_mode = (debug_mode != -1) ? debug_mode : cfgvalues.debug_mode;
+>>>>>>> 1.7
 	cfgvalues.online_mode = (online_mode != -1) ? online_mode : cfgvalues.online_mode;
 	cfgvalues.resolve_mode = (resolve_mode != -1) ? resolve_mode : cfgvalues.resolve_mode;
 	cfgvalues.fw1_2000 = (fw1_2000 != -1) ? fw1_2000 : cfgvalues.fw1_2000;
