@@ -1,10 +1,10 @@
 /******************************************************************************/
-/* fw1-loggrabber - (C)2004 Torsten Fellhauer, Xiaodong Lin                   */
+/* fw1-loggrabber - (C)2005 Torsten Fellhauer, Xiaodong Lin                   */
 /******************************************************************************/
 /* Version: 1.11                                                              */
 /******************************************************************************/
 /*                                                                            */
-/* Copyright (c) 2004 Torsten Fellhauer, Xiaodong Lin                         */
+/* Copyright (c) 2005 Torsten Fellhauer, Xiaodong Lin                         */
 /* All rights reserved.                                                       */
 /*                                                                            */
 /* Redistribution and use in source and binary forms, with or without         */
@@ -37,34 +37,35 @@
 #include <ctype.h>
 #include <time.h>
 
-#ifdef USE_MYSQL
-#	include <mysql/mysql.h>
+#ifdef SOLARIS2
+#	define  BIG_ENDIAN    4321
+#	define  LITTLE_ENDIAN 1234
+#	define  BYTE_ORDER BIG_ENDIAN
+#	define  SLEEP(sec) sleep(sec)
+#	include <netinet/in.h>
+#	include <arpa/inet.h>
+#	include <syslog.h>
+#	include <unistd.h>
+#elif WIN32
+#	define  BIG_ENDIAN    4321
+#	define  LITTLE_ENDIAN 1234
+#	define  BYTE_ORDER LITTLE_ENDIAN
+#	define  BUFSIZE MAX_PATH
+#	define  SLEEP(sec) Sleep(1000*sec)
+#	include <windows.h>
+#	include <winsock.h>
+#else
+#	define  SLEEP(sec) sleep(sec)
+#	include <netinet/in.h>
+#	include <arpa/inet.h>
+#	include <unistd.h>
+#	include <endian.h>
+#	include <syslog.h>
 #endif
 
-#ifdef SOLARIS2
-#       define  BIG_ENDIAN    4321
-#       define  LITTLE_ENDIAN 1234
-#       define  BYTE_ORDER BIG_ENDIAN
-#       define  SLEEP(sec) sleep(sec)
-#       include <netinet/in.h>
-#       include <arpa/inet.h>
-#       include <syslog.h>
-#       include <unistd.h>
-#elif WIN32
-#       define  BIG_ENDIAN    4321
-#       define  LITTLE_ENDIAN 1234
-#       define  BYTE_ORDER LITTLE_ENDIAN
-#       define  BUFSIZE MAX_PATH
-#       define  SLEEP(sec) Sleep(1000*sec)
-#       include <windows.h>
-#       include <winsock.h>
-#else
-#       define  SLEEP(sec) sleep(sec)
-#       include <netinet/in.h>
-#       include <arpa/inet.h>
-#       include <unistd.h>
-#       include <endian.h>
-#       include <syslog.h>
+#ifdef USE_ODBC
+#	include <sql.h>
+#	include <sqlext.h>
 #endif
 
 #include "opsec/lea.h"
@@ -77,6 +78,20 @@
  */
 #define VERSION			"1.11"
 
+#ifdef WIN32
+#	define ODBCVERSION	"Windows-ODBC-support"
+#elif STATIC_IODBC
+#	define ODBCVERSION	"static iODBC-support"
+#elif DYNAMIC_IODBC
+#	define ODBCVERSION	"dynamic iODBC-support"
+#elif STATIC_UNIXODBC
+#	define ODBCVERSION	"static unixODBC-support"
+#elif DYNAMIC_UNIXODBC
+#	define ODBCVERSION	"dynamic unixODBC-support"
+#else
+#	define ODBCVERSION	"no ODBC-support"
+#endif
+
 #define TRUE			1
 #define FALSE			0
 
@@ -84,7 +99,7 @@
 #define DATETIME_UNIX		1
 #define DATETIME_STD		2
 
-#define NUMBER_LIDX_FIELDS	103
+#define NUMBER_LIDX_FIELDS	108
 
 #define LIDX_NUM		0
 #define LIDX_TIME		1
@@ -189,6 +204,11 @@
 #define LIDX_RPC_PROG		100
 #define LIDX_TH_FLAGS		101
 #define LIDX_CP_MESSAGE		102
+#define LIDX_REJECT_CATEGORY	103
+#define LIDX_IKE_LOG		104
+#define LIDX_NEGOTIATION_ID	105
+#define LIDX_DECRYPTION_FAILURE	106
+#define LIDX_LEN		107
 
 #define NUMBER_AIDX_FIELDS	21
 
@@ -217,40 +237,52 @@
 #define SCREEN                  0
 #define LOGFILE                 1
 #define SYSLOG                  2
-#define SNMP                    3 // For future use
+#define ODBC                    3
+#define SNMP                    4	// For future use
+
+#define INITIAL_CAPACITY   1024
+#define CAPACITY_INCREMENT 4096
 
 /*
  * Type definitions
  */
 typedef struct stringlist
 {
-	char *	data;
-	struct stringlist * next;
-} stringlist;
+  char *data;
+  struct stringlist *next;
+}
+stringlist;
 
 typedef struct configvalues
 {
-	int	debug_mode;
-	int	online_mode;
-	int	resolve_mode;
-	int	mysql_mode;
-	int	fw1_2000;
-	int	audit_mode;
-	int	showfiles_mode;
-	int 	fieldnames_mode;
-	int 	dateformat;
-	int 	log_mode;
-	char	record_separator;
-	char*	config_filename;
-	char*	leaconfig_filename;
-	char*	mysql_host;
-	char*	mysql_database;
-	char*	mysql_user;
-	char*	mysql_password;
-	char*	fw1_logfile;
-	char*	output_file_prefix;
-	long	output_file_rotatesize;
-} configvalues;
+  int debug_mode;
+  int online_mode;
+  int resolve_mode;
+  int fw1_2000;
+  int audit_mode;
+  int showfiles_mode;
+  int fieldnames_mode;
+  int dateformat;
+  int log_mode;
+#ifndef WIN32
+  int syslog_facility;
+#endif
+  char record_separator;
+  char *config_filename;
+  char *leaconfig_filename;
+#ifdef USE_ODBC
+  char *odbc_dsn;
+#endif
+  char *fw1_logfile;
+  char *output_file_prefix;
+  long output_file_rotatesize;
+  char *fields;
+  int fw1_filter_count;
+  char **fw1_filter_array;
+  int audit_filter_count;
+  char **audit_filter_array;
+}
+configvalues;
 
 /*
  * Function prototypes
@@ -259,249 +291,314 @@ typedef struct configvalues
 /*
  * function to get the content of a given FW-1 Logfile
  */
-int 		   read_fw1_logfile(char **);
+int read_fw1_logfile (char **);
 
 /*
  * event handler used by read_fw1_logfile to approve a rulebase
  */
-int 		   read_fw1_logfile_queryack(OpsecSession *, int, eLeaFilterAction, int);
+int read_fw1_logfile_queryack (OpsecSession *, int, eLeaFilterAction, int);
 
 /*
  * event handler used by read_fw1_logfile to get session end reason
  */
-int                read_fw1_logfile_end(OpsecSession *);
+int read_fw1_logfile_end (OpsecSession *);
 
 /*
  * event handler used by read_fw1_logfile to print returned log records
  */
-int                read_fw1_logfile_n_record_stdout(OpsecSession *, lea_record *, int []);
-int                read_fw1_logfile_a_record_stdout(OpsecSession *, lea_record *, int []);
-
-/*
- * event handler used by read_fw1_logfile to store returned log records in MySQL database
- */
-#ifdef USE_MYSQL
-	int        read_fw1_logfile_record_mysql(OpsecSession *, lea_record *, int []);
-#endif
+int read_fw1_logfile_record (OpsecSession *, lea_record *, int[]);
 
 /*
  * dummy event handler for debugging purposes
  */
-int 		   read_fw1_logfile_dict(OpsecSession *, int , LEA_VT , int);
+int read_fw1_logfile_dict (OpsecSession *, int, LEA_VT, int);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_eof(OpsecSession *);
+int read_fw1_logfile_eof (OpsecSession *);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_switch(OpsecSession *);
+int read_fw1_logfile_switch (OpsecSession *);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_collogs(OpsecSession *);
+int read_fw1_logfile_collogs (OpsecSession *);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_suspend(OpsecSession *);
+int read_fw1_logfile_suspend (OpsecSession *);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_resume(OpsecSession *);
+int read_fw1_logfile_resume (OpsecSession *);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_start(OpsecSession *);
+int read_fw1_logfile_start (OpsecSession *);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_failedconn(OpsecEntity *entity, long peer_ip, int sic_errno, char *sic_errmsg);
+int read_fw1_logfile_failedconn (OpsecEntity * entity, long peer_ip,
+				 int sic_errno, char *sic_errmsg);
 
 /*
  * dummy event handler for debugging purposes
  */
-int                read_fw1_logfile_established(OpsecSession *);
+int read_fw1_logfile_established (OpsecSession *);
 
 /*
  * function to get all available FW-1 Logfile Names
  */
-int                get_fw1_logfiles();
+int get_fw1_logfiles ();
 
 /*
  * event handler used by get_fw1_logfiles to print the Logfile Names
  */
-int 		   get_fw1_logfiles_dict(OpsecSession *, int , LEA_VT , int);
+int get_fw1_logfiles_dict (OpsecSession *, int, LEA_VT, int);
 
 /*
  * event handler used by get_fw1_logfiles to get session end reason
  */
-int                get_fw1_logfiles_end(OpsecSession *);
+int get_fw1_logfiles_end (OpsecSession *);
 
 /*
  * function to create a new rule for a filter rulebase
  */
-LeaFilterRulebase* create_fw1_filter_rule(LeaFilterRulebase*, char[255]);
-LeaFilterRulebase* create_audit_filter_rule(LeaFilterRulebase*, char[255]);
+LeaFilterRulebase *create_fw1_filter_rule (LeaFilterRulebase *, char[255]);
+LeaFilterRulebase *create_audit_filter_rule (LeaFilterRulebase *, char[255]);
 
 /*
  * function to clean up the opsec environment
  */
-void               cleanup_fw1_environment(OpsecEnv *, OpsecEntity *, OpsecEntity *);
-
-/*
- * functions for database support
- */
-#ifdef USE_MYSQL
-	MYSQL*     connect_to_mysql(MYSQL *, long int *, configvalues*);
-	void       disconnect_from_mysql(MYSQL *);
-#endif
+void cleanup_fw1_environment (OpsecEnv *, OpsecEntity *, OpsecEntity *);
 
 /*
  * function to read configfile
  */
-void               read_config_file(char*, struct configvalues*);
-
-/*
- * array initializations
- */
-void		   initialize_lfield_headers(char***);
-void		   initialize_afield_headers(char***);
-void		   initialize_lfield_values(char***);
-void		   initialize_afield_values(char***);
-void		   initialize_lfield_output(int*);
-void		   initialize_afield_output(int*);
-void		   free_lfield_arrays(char***);
-void		   free_afield_arrays(char***);
-
-/*
- * function to show help about this tool
- */
-void               usage(char *);
-void               show_supported_fields();
-
-/*
- * cleanup functions
- */
-void               exit_loggrabber(int);
-
-/*
- * helper functions for working with lists
- */
-int 		   stringlist_append (stringlist **, char *);
-void		   stringlist_print (stringlist **);
-stringlist* 	   stringlist_search(stringlist **, char *, char **);
-stringlist*        stringlist_delete(stringlist **);
-
-/*
- * helper function to work with strings
- */
-char*		   string_get_token(char **, char);
-char* 		   string_duplicate(const char *);
-char* 		   string_left_trim(char *, char);
-char* 		   string_right_trim(char *, char);
-char* 		   string_trim(char *, char);
-char* 		   string_escape(char*, char);
-int                string_icmp(const char *, const char *);
+void check_config_files (char *, char *);
+void read_config_file (char *, struct configvalues *);
 
 /*
  * initilization function to define open, submit and close handler
  */
-void logging_init_env(int);
+void logging_init_env (int);
 
 #ifndef WIN32
 /*
  * syslog initializations
  */
-void               open_syslog();
-void               submit_syslog(char*);
-void               close_syslog();
+void open_syslog ();
+void submit_syslog (char *);
+void close_syslog ();
 #endif
 
 /*
  * screen initializations
  */
-void               open_screen();
-void               submit_screen(char*);
-void               close_screen();
+void open_screen ();
+void submit_screen (char *);
+void close_screen ();
 
 /*
  * log file initializations
  */
-void               open_logfile();
-void               submit_logfile(char*);
-void               close_logfile();
+void open_logfile ();
+void submit_logfile (char *);
+void close_logfile ();
 
-//pointer to function open log pipe
-void (*open_log)();
+#ifdef USE_ODBC
+/*
+ * odbc initializations
+ */
+void open_odbc ();
+void submit_odbc (char *);
+void close_odbc ();
+#endif
 
-//pointer to function submit
-void (*submit_log)(char* message);
+#ifdef USE_ODBC
+/*
+ * ODBC related functions
+ */
+int create_loggrabber_tables ();
+int ODBC_Errors (char *);
+#endif
 
-//pointer to function close log pipe
-void (*close_log)();
+/*
+ * array initializations
+ */
+void initialize_lfield_headers (char ***);
+void initialize_afield_headers (char ***);
+void initialize_lfield_values (char ***);
+void initialize_afield_values (char ***);
+void initialize_lfield_output (int *);
+void initialize_afield_output (int *);
+void initialize_lfield_order (int *);
+void initialize_afield_order (int *);
+void free_lfield_arrays (char ***);
+void free_afield_arrays (char ***);
+#ifdef USE_ODBC
+void initialize_lfield_dbheaders (char ***);
+void initialize_afield_dbheaders (char ***);
+void initialize_lfield_dblength (int *);
+void initialize_afield_dblength (int *);
+#endif
+
+/*
+ * function to show help about this tool
+ */
+void usage (char *);
+void show_supported_fields ();
+
+/*
+ * cleanup functions
+ */
+void exit_loggrabber (int);
+
+/*
+ * helper functions for working with lists
+ */
+int stringlist_append (stringlist **, char *);
+void stringlist_print (stringlist **);
+stringlist *stringlist_search (stringlist **, char *, char **);
+stringlist *stringlist_delete (stringlist **);
+
+/*
+ * helper function to work with strings
+ */
+char *string_get_token (char **, char);
+char *string_duplicate (const char *);
+unsigned int string_cat (char **, const char *, unsigned int);
+char *string_left_trim (char *, char);
+char *string_right_trim (char *, char);
+char *string_trim (char *, char);
+char *string_escape (char *, char);
+char *string_rmchar (char *, char);
+char *string_mask_newlines (char *);
+int string_icmp (const char *, const char *);
+int string_incmp (const char *, const char *, size_t);
+char *string_toupper (const char *);
+char getschar ();
 
 /*
  * file operation functions
  */
 // copy a file into another file
-void fileCopy(const char *inputfile, const char *outputfile);
+void fileCopy (const char *inputfile, const char *outputfile);
 
 // check and see whether or not a file exists
-int fileExist(const char * fileName);
+int fileExist (const char *fileName);
 
+/*
+ * pointers to functions
+ */
+//pointer to function open log pipe
+void (*open_log) ();
+
+//pointer to function submit
+void (*submit_log) (char *message);
+
+//pointer to function close log pipe
+void (*close_log) ();
 
 /*
  * Global definitions
  */
-int debug_mode 		= 0;
-int show_files 		= -1;
-int online_mode		= -1;
-int resolve_mode	= -1;
-char *LogfileName	= NULL;
-int fw1_2000		= -1;
-int audit_log		= -1;
-stringlist *sl 		= NULL;
-char **filterarray 	= NULL;
-int filtercount 	= 0;
-int output_fields	= 0;
-int mysql_mode		= -1;
-int fieldnames_mode	= -1;
+int debug_mode = -1;
+int show_files = -1;
+int online_mode = -1;
+int resolve_mode = -1;
+char *LogfileName = NULL;
+int fw1_2000 = -1;
+int audit_log = -1;
+stringlist *sl = NULL;
+char **filterarray = NULL;
+int filtercount = 0;
+int output_fields = 0;
+int mysql_mode = -1;
+int fieldnames_mode = -1;
+int create_tables = FALSE;
 
-char s[1024];
+#ifdef USE_ODBC
+/* 
+ * global variables for ODBC
+ */
+SQLHENV henv;
+SQLHDBC hdbc;
+SQLHSTMT hstmt;
+int connected = 0;
+const char *infotable = "loggrabber";
+const char *logtable = "fw1logs";
+const char *audittable = "auditlogs";
+char *dbms_name = NULL;
+char *dbms_ver = NULL;
+long int tableindex = -1;
+#endif
 
 /**
  * A character array which is used to convert several variables to char array
  **/
-char stringnumber[2048];
+char stringnumber[16384];
+char headernumber[16384];
 
-char** lfield_headers[NUMBER_LIDX_FIELDS];
-char** afield_headers[NUMBER_AIDX_FIELDS];
-char** lfields[NUMBER_LIDX_FIELDS];
-char** afields[NUMBER_AIDX_FIELDS];
+char s[1024];
+
+char **lfield_headers[NUMBER_LIDX_FIELDS];
+char **afield_headers[NUMBER_AIDX_FIELDS];
+char **lfields[NUMBER_LIDX_FIELDS];
+char **afields[NUMBER_AIDX_FIELDS];
 int lfield_output[NUMBER_LIDX_FIELDS];
 int afield_output[NUMBER_AIDX_FIELDS];
-
-#ifdef USE_MYSQL
-	long int mysql_maxnumber= 0;
-	MYSQL *mysqlconn, mysql;
+int lfield_order[NUMBER_LIDX_FIELDS];
+int afield_order[NUMBER_AIDX_FIELDS];
+#ifdef USE_ODBC
+char **lfield_dbheaders[NUMBER_LIDX_FIELDS];
+char **afield_dbheaders[NUMBER_AIDX_FIELDS];
+int lfield_dblength[NUMBER_LIDX_FIELDS];
+int afield_dblength[NUMBER_AIDX_FIELDS];
 #endif
 
-configvalues cfgvalues = {0, 0, 1, 0, 0, 0, 0, 1, 2, SCREEN, '|', "fw1-loggrabber.conf", "lea.conf", "localhost", "fw1loggrabber", "fw1", "fw1", "fw.log", "fw1-loggrabber", 1048576};
+configvalues cfgvalues = {
+  0,				// debug_mode
+  FALSE,			// online_mode
+  TRUE,				// resolve_mode
+  FALSE,			// fw1_2000
+  FALSE,			// audit_mode
+  FALSE,			// showfiles_mode
+  TRUE,				// fieldnames_mode
+  DATETIME_STD,			// dateformat
+  SCREEN,			// log_mode
+#ifndef WIN32
+  LOG_LOCAL1,			// syslog_facility
+#endif
+  '|',				// record_separator
+  "fw1-loggrabber.conf",	// config_filename
+  "lea.conf",			// leaconfig_filename
+#ifdef USE_ODBC
+  "FW1-LOGGRABBER",		// odbc_dsn
+#endif
+  "fw.log",			// fw1_logfile
+  "fw1-loggrabber",		// output_file_prefix
+  1048576,			// output_file_rotatesize
+  NULL,				// fields
+  0,				// fw1_filter_count
+  NULL,				// fw1_filter_array
+  0,				// audit_filter_count
+  NULL				// audit_filter_array
+};
 
-int initialCapacity	= 4096;
-int capacityIncrement	= 1024;
 
 /**
  * The current log file descriptor
  **/
-FILE* logstream;
+FILE *logstream;
 
 /**
  * The flag, which is used to control whether or not fw1-loggrabber needs to exit
@@ -517,3 +614,6 @@ int recoverInterval = 10;
  * The flag, which indicates whether or not the session has been established
  **/
 int established = FALSE;
+
+int initialCapacity = 1024;
+int capacityIncrement = 4096;
