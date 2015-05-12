@@ -4,7 +4,7 @@ CC_CMD = gcc
 LD_CMD = gcc
 CC = $(GCC_PREFIX)/bin/$(CC_CMD)
 LD = $(GCC_PREFIX)/bin/$(LD_CMD)
-PKG_DIR = ../OPSEC_SDK_6_0.linux30
+PKG_DIR = /home/vagrant/pkg_rel/
 INSTALL_PREFIX = /usr/local/fw1-loggrabber
 
 EXE_NAME = fw1-loggrabber
@@ -15,7 +15,7 @@ BINDIR=${INSTALL_PREFIX}/bin
 MANDIR=${INSTALL_PREFIX}/man
 TEMPDIR=/tmp
 
-LIB_DIR = $(PKG_DIR)/lib/release.static
+LIB_DIR = $(PKG_DIR)/lib/release.dynamic/
 STATIC_LIBS = \
 	-lopsec \
 	-lsicauth -lsic \
@@ -25,15 +25,15 @@ STATIC_LIBS = \
 	-lckpssl -lcpcert \
 	-lcpcryptutil -lcpprng \
 	-lcpbcrypt -lcpca \
-	-lasn1cpp \
 	-lcpopenssl \
 	-lAppUtils -lEventUtils \
 	-lEncode -lComUtils \
 	-lResolve -lDataStruct \
 	-lOS \
-	-lcpprod50 
+	-lcpprod50 \
+        -lfwsetdb 
 
-LIBS = -lpthread -lresolv -ldl -lnsl -lelf -lstdc++
+LIBS = -L/usr/lib -lpthread -lresolv -ldl -lnsl -lelf -lstdc++
 CFLAGS += -m32 -g -Wall -fpic -I$(PKG_DIR)/include -DLINUX -DUNIXOS=1 -DDEBUG
 
 %.o: %.c
