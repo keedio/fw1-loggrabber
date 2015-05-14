@@ -4,7 +4,7 @@ CC_CMD = gcc
 LD_CMD = gcc
 CC = $(GCC_PREFIX)/bin/$(CC_CMD)
 LD = $(GCC_PREFIX)/bin/$(LD_CMD)
-PKG_DIR = /home/vagrant/pkg_rel/
+PKG_DIR = /opt/Externallibs/OPSEC/pkg_rel
 INSTALL_PREFIX = /usr/local/fw1-loggrabber
 
 EXE_NAME = fw1-loggrabber
@@ -33,7 +33,7 @@ STATIC_LIBS = \
 	-lcpprod50 \
         -lfwsetdb 
 
-LIBS = -L/usr/lib -lpthread -lresolv -ldl -lnsl -lelf -lstdc++
+LIBS = -L/usr/lib -lpthread -lresolv -ldl -lnsl /usr/lib/libelf.so.1 /usr/lib/libstdc++.so.5 
 CFLAGS += -m32 -g -Wall -fpic -I$(PKG_DIR)/include -DLINUX -DUNIXOS=1 -DDEBUG
 
 %.o: %.c
